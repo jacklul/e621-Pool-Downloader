@@ -12,6 +12,7 @@ You will need **Visual C++ 2012 Redistributable (x86)** for it to run - https://
 ### Linux
 
 Install **PHP library** (>=5.6) - `sudo apt-get install php-cli`
+
 _cURL extension is optional, but recommended -  `sudo apt-get install php-curl`_
 
 ## Usage:
@@ -20,6 +21,7 @@ _cURL extension is optional, but recommended -  `sudo apt-get install php-curl`_
 - Launch the app by using a start script (Windows: **dlpool.bat**, Linux: **dlpool.sh**)
 - Enter pool address in format: `https://e621.net/pool/show/378`, or just ID: `378` and hit enter
 - Script will retrieve information about the pool and start downloading it to the current working directory
+
 _Current working directory = directory the script was started from, usually it will be downloading to the directory in which the script is._
 
 ### Updating:
@@ -28,4 +30,5 @@ _Current working directory = directory the script was started from, usually it w
 - Script will retrieve information about the pool and start updating it - missing and corrupted files will be redownloaded, newly added files will be downloaded
 
 **Script accepts arguments which can be either pool URL/ID or path to downloaded pool.**
+
 _Moving directory over a launch script works well too!_
