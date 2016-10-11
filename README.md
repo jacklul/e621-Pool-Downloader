@@ -12,7 +12,7 @@ You will need **Visual C++ 2012 Redistributable (x86)** for it to run - https://
 
 ### Linux
 
-Install **PHP library** (>=5.6) - `sudo apt-get install php-cli`
+Install **PHP library** - `sudo apt-get install php-cli`
 
 _cURL extension is optional, but recommended -  `sudo apt-get install php-curl`_
 
