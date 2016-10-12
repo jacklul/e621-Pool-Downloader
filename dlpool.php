@@ -24,7 +24,7 @@ class e621_Pool_Downloader {
      *
      * @var int
      */
-    private $VERSION = '1.0.0';
+    private $VERSION = '1.0.1';
 
     /**
      * Script start time
@@ -326,7 +326,7 @@ class e621_Pool_Downloader {
                 if (!file_exists($infoFile)) {
                     file_put_contents($infoFile, 'ID=' . $this->POOL_ID . "\n");
                     if (!$this->IS_LINUX) {
-                        system('attrib +H ' . escapeshellarg($infoFile));
+                        exec('attrib +H ' . escapeshellarg($infoFile));
                     }
                 }
             } else {
