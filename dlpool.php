@@ -24,7 +24,7 @@ class e621_Pool_Downloader {
      *
      * @var int
      */
-    private $VERSION = '1.0.1';
+    private $VERSION = '1.0.2';
 
     /**
      * Script start time
@@ -313,6 +313,7 @@ class e621_Pool_Downloader {
         if ($posts) {
             $this->POOL_NAME = preg_replace('/[^a-z0-9_]/i', '', $this->POOL_NAME);
             $this->POOL_NAME = str_replace('_', ' ', $this->POOL_NAME);
+			$this->POOL_NAME = preg_replace('!\s+!', ' ', $this->POOL_NAME);
 
             $infoFile = $this->WORK_DIR . '/' . $this->POOL_NAME . '/.poolinfo';
 
