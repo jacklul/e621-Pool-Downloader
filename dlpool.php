@@ -24,7 +24,14 @@ class e621_Pool_Downloader {
      *
      * @var int
      */
-    private $VERSION = '1.0.2';
+    private $VERSION = '1.0.3';
+
+    /**
+     * App update URL
+     *
+     * @var string
+     */
+    private $UPDATE_URL = 'https://api.github.com/repos/jacklul/e621-Pool-Downloader/releases/latest';
 
     /**
      * Script start time
@@ -279,7 +286,43 @@ class e621_Pool_Downloader {
      */
     public function run()
     {
-        print("e621 Pool Downloader by Jack'lul <jacklul.com>   (v" . $this->VERSION . ") \n\n");
+        print("e621 Pool Downloader by Jack'lul <jacklul.com>  (v" . $this->VERSION . ") \n\n");
+
+        if (!empty($this->UPDATE_URL)) {
+            $updatecheckfile = ROOT . '/.updatecheck';
+
+            if (!file_exists($updatecheckfile) || file_get_contents($updatecheckfile) < time() - 300) {
+                file_put_contents($updatecheckfile, time());
+                if (!$this->IS_LINUX) {
+                    exec('attrib +H "' . $updatecheckfile . '"');
+                }
+
+                print("Checking for updates...");
+
+                $ch = curl_init($this->UPDATE_URL);
+                curl_setopt($ch, CURLOPT_USERAGENT, $this->NAME);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+                $update_check = curl_exec($ch);
+                curl_close($ch);
+
+                if (!empty($update_check)) {
+                    $update_check = json_decode($update_check, true);
+                }
+
+                $REMOTE_VERSION = $update_check['tag_name'];
+
+                if ($REMOTE_VERSION !== "" && version_compare($this->VERSION, $REMOTE_VERSION, '<')) {
+                    print("\r" . 'New version available - v' . $REMOTE_VERSION . "!\nDownload: https://github.com/jacklul/e621-Pool-Downloader/releases/latest\n\n");
+                } else {
+                    print("\r" . str_repeat(" ", 50) . "\r");
+                }
+            }
+        }
 
         if (empty($this->POOL_ID)) {
             print("Please enter either:\n");
@@ -327,7 +370,7 @@ class e621_Pool_Downloader {
                 if (!file_exists($infoFile)) {
                     file_put_contents($infoFile, 'ID=' . $this->POOL_ID . "\n");
                     if (!$this->IS_LINUX) {
-                        exec('attrib +H ' . escapeshellarg($infoFile));
+                        exec('attrib +H "' . $infoFile . '"');
                     }
                 }
             } else {
