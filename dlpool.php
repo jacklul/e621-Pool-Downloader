@@ -34,6 +34,13 @@ class e621_Pool_Downloader {
     private $UPDATE_URL = 'https://api.github.com/repos/jacklul/e621-Pool-Downloader/releases/latest';
 
     /**
+     * User-Agent
+     *
+     * @var string
+     */
+    private $USER_AGENT = "e621 Pool Downloader (https://github.com/jacklul/e621-Pool-Downloader)";
+
+    /**
      * Script start time
      *
      * @var int
@@ -217,7 +224,7 @@ class e621_Pool_Downloader {
         if ($this->USE_CURL) {
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_USERAGENT, $this->NAME);
+            curl_setopt($ch, CURLOPT_USERAGENT, $this->USER_AGENT);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
@@ -231,7 +238,7 @@ class e621_Pool_Downloader {
             return curl_exec($ch);
         } else {
             print(str_repeat(' ', 10) . "\r" . $this->LINE_BUFFER);
-            $result = file_get_contents($url, false, stream_context_create(['http' => ['user_agent' => $this->NAME]]));
+            $result = file_get_contents($url, false, stream_context_create(['http' => ['user_agent' => $this->USER_AGENT]]));
             return $result;
         }
     }
@@ -300,7 +307,7 @@ class e621_Pool_Downloader {
                 print("Checking for updates...");
 
                 $ch = curl_init($this->UPDATE_URL);
-                curl_setopt($ch, CURLOPT_USERAGENT, $this->NAME);
+                curl_setopt($ch, CURLOPT_USERAGENT, $this->USER_AGENT);
                 curl_setopt($ch, CURLOPT_TIMEOUT, 10);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
