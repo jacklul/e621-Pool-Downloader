@@ -293,13 +293,13 @@ class e621_Pool_Downloader {
      */
     public function run()
     {
-        print("e621 Pool Downloader by Jack'lul <jacklul.com>  (v" . $this->VERSION . ") \n\n");
+        print($this->NAME . " (v" . $this->VERSION . ") \n\n");
 
         if (!empty($this->UPDATE_URL)) {
             $updatecheckfile = ROOT . '/.updatecheck';
 
-            if (!file_exists($updatecheckfile) || file_get_contents($updatecheckfile) < time() - 300) {
-                file_put_contents($updatecheckfile, time());
+            if (!file_exists($updatecheckfile) || filemtime($updatecheckfile) + 300 < time()) {
+                touch($updatecheckfile);
                 if (!$this->IS_LINUX) {
                     exec('attrib +H "' . $updatecheckfile . '"');
                 }
