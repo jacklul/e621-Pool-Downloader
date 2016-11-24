@@ -24,7 +24,7 @@ class e621_Pool_Downloader {
      *
      * @var int
      */
-    private $VERSION = '1.0.3';
+    private $VERSION = '1.0.4';
 
     /**
      * App update URL
