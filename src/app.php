@@ -11,7 +11,7 @@
 
 define("ROOT", dirname(str_replace("phar://", "", __DIR__)));
 
-class e621_Pool_Downloader {
+class App {
     /**
      * App name
      *
@@ -24,7 +24,7 @@ class e621_Pool_Downloader {
      *
      * @var int
      */
-    private $VERSION = '1.0.4';
+    private $VERSION = '1.1.0';
 
     /**
      * App update URL
@@ -363,7 +363,7 @@ class e621_Pool_Downloader {
         if ($posts) {
             $this->POOL_NAME = preg_replace('/[^a-z0-9_]/i', '', $this->POOL_NAME);
             $this->POOL_NAME = str_replace('_', ' ', $this->POOL_NAME);
-			$this->POOL_NAME = preg_replace('!\s+!', ' ', $this->POOL_NAME);
+            $this->POOL_NAME = preg_replace('!\s+!', ' ', $this->POOL_NAME);
 
             $infoFile = $this->WORK_DIR . '/' . $this->POOL_NAME . '/.poolinfo';
 
@@ -407,12 +407,55 @@ class e621_Pool_Downloader {
                 }
             }
 
+            $removed = 0;
+            foreach (new \DirectoryIterator($downloadDir) as $fileInfo) {
+                if ($fileInfo->isDot() || $fileInfo->isDir() || $fileInfo->getFilename() == '.poolinfo') {
+                    continue;
+                }
+
+                $md5 = md5_file($downloadDir . '/' . $fileInfo->getFilename());
+
+                foreach ($posts as $post) {
+                    if ($md5 === $post['md5']) {
+                        continue 2;
+                    }
+                }
+
+                $destination_original = $downloadDir . '/deleted/' . $md5;
+
+                if (file_exists($destination_original . '.' . $fileInfo->getExtension())) {
+                    $i = 0;
+                    do {
+                        $i++;
+                        $destination = $destination_original . '_' . $i;
+                    } while(file_exists($destination . '.' . $fileInfo->getExtension()));
+
+                    $destination_original = $destination;
+                }
+
+                if (!is_dir($downloadDir . '/deleted/')) {
+                    mkdir($downloadDir . '/deleted/');
+                }
+
+                rename($downloadDir . '/' . $fileInfo->getFilename(), $destination_original . '.' . $fileInfo->getExtension());
+
+                $removed++;
+            }
+
             if ($filesDownloaded > 0) {
                 $this->flushLine();
-                print("Downloaded " . $filesDownloaded . " images.\n\n");
+                print("Downloaded " . $filesDownloaded . " images.\n");
             } else {
-                print("Nothing to download.\n\n");
+                print("Nothing to download.\n");
             }
+
+            if ($removed > 0) {
+                $this->flushLine();
+                print("Removed " . $removed . " images.\n");
+            }
+
+            print("\n");
+            echo "\x07"; // this is the beep
         } else {
             $this->flushLine();
             print("\rPool not found: " . $this->POOL_ID . "\n\n");
@@ -420,14 +463,4 @@ class e621_Pool_Downloader {
 
         print("Finished in " . round(microtime(true) - $this->START_TIME, 3) . " seconds.\n");
     }
-}
-
-/**
- * Run it
- */
-try {
-    $app = new e621_Pool_Downloader((isset($argv[1]) ? $argv[1] : ''));
-    $app->run();
-} catch (\Exception $e) {
-    print($e);
 }
