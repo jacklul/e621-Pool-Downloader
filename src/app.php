@@ -455,7 +455,6 @@ class App {
             }
 
             print("\n");
-            echo "\x07"; // this is the beep
         } else {
             $this->flushLine();
             print("\rPool not found: " . $this->POOL_ID . "\n\n");
