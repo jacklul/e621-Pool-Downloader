@@ -24,7 +24,7 @@ class App {
      *
      * @var int
      */
-    private $VERSION = '1.1.0';
+    private $VERSION = '1.1.1';
 
     /**
      * App update URL
