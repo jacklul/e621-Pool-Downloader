@@ -442,15 +442,15 @@ class App {
                 $removed++;
             }
 
+            $this->flushLine();
+
             if ($filesDownloaded > 0) {
-                $this->flushLine();
                 print("Downloaded " . $filesDownloaded . " images.\n");
             } else {
                 print("Nothing to download.\n");
             }
 
             if ($removed > 0) {
-                $this->flushLine();
                 print("Removed " . $removed . " images.\n");
             }
 
