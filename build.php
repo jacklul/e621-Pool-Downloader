@@ -36,10 +36,10 @@ if (ini_get("phar.readonly") == 0) {
 
         $Parsedown = new Parsedown();
 
-        $license = $Parsedown->text(file_get_contents(__DIR__ . '/LICENSE.md'));
+        $license = $Parsedown->text(file_get_contents(__DIR__ . '/LICENSE'));
         $readme = $Parsedown->text(file_get_contents(__DIR__ . '/README.md'));
 
-        $readme = str_replace("https://github.com/jacklul/e621-Pool-Downloader/blob/master/LICENSE.md", "LICENSE.html", $readme);
+        $readme = str_replace("https://github.com/jacklul/e621-Pool-Downloader/blob/master/LICENSE", "LICENSE.html", $readme);
 
         file_put_contents($buildRoot . "/README.html", $readme);
         file_put_contents($buildRoot . "/LICENSE.html", $license);
