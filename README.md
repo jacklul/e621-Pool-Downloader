@@ -37,4 +37,4 @@ _Moving directory over a launch script works well too!_
 
 ## License
 
-See [LICENSE](https://github.com/jacklul/e621-Pool-Downloader/blob/master/LICENSE.md).
+See [LICENSE](https://github.com/jacklul/e621-Pool-Downloader/blob/master/LICENSE).
