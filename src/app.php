@@ -9,9 +9,12 @@
  * with this source code.
  */
 
+namespace jacklul\e621dlpool;
+
 define("ROOT", dirname(str_replace("phar://", "", __DIR__)));
 
-class App {
+class App
+{
     /**
      * App name
      *
@@ -106,7 +109,7 @@ class App {
     /**
      * Class constructor
      *
-     * @param string $arg
+     * @param  string $arg
      * @throws Exception
      */
     public function __construct($arg = '')
@@ -193,7 +196,7 @@ class App {
         }
 
         if ($total > 0) {
-            print (str_repeat(' ', 10) . "\r" . $this->LINE_BUFFER . ' ' . round(($progress * 100) / $total, 0)) . "%";
+            print(str_repeat(' ', 10) . "\r" . $this->LINE_BUFFER . ' ' . round(($progress * 100) / $total, 0)) . "%";
         }
 
         usleep(100);
@@ -202,10 +205,11 @@ class App {
     /**
      * Parse user input
      *
-     * @param $string
+     * @param  $string
      * @return mixed
      */
-    private function parseInput($string) {
+    private function parseInput($string)
+    {
         if (preg_match("/e621\.net\/pool\/show\/(.*)/", $string, $matches)) {
             $string = $matches[1];
         }
@@ -215,8 +219,8 @@ class App {
     /**
      * Perform simple cURL download request
      *
-     * @param $url
-     * @param bool $progress
+     * @param  $url
+     * @param  bool $progress
      * @return mixed
      */
     private function cURL($url, $progress = true)
@@ -246,7 +250,7 @@ class App {
     /**
      * Get needed data from e621 API
      *
-     * @param int $page
+     * @param  int $page
      * @return mixed
      */
     private function getPoolPage($page = 1)
@@ -428,7 +432,7 @@ class App {
                     do {
                         $i++;
                         $destination = $destination_original . '_' . $i;
-                    } while(file_exists($destination . '.' . $fileInfo->getExtension()));
+                    } while (file_exists($destination . '.' . $fileInfo->getExtension()));
 
                     $destination_original = $destination;
                 }

@@ -12,7 +12,7 @@
 /**
  * Include the script
  */
-require_once("app.php");
+require_once "app.php";
 
 /**
  * Run it
