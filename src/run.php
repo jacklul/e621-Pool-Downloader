@@ -18,7 +18,7 @@ require_once "app.php";
  * Run it
  */
 try {
-    $app = new App((isset($argv[1]) ? $argv[1] : ''));
+    $app = new jacklul\e621dlpool\App((isset($argv[1]) ? $argv[1] : ''));
     $app->run();
 } catch (\Exception $e) {
     print($e);
