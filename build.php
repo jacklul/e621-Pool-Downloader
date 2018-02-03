@@ -1,15 +1,15 @@
 <?php
 
+if (!is_dir("build/")) {
+    mkdir("build/", 0755, true);
+}
+
 $pharName = "dlpool";
 $srcRoot = realpath("src");
 $buildRoot = realpath("build");
 
 $buildFile = 'build/e621_Pool_Downloader.zip';
 $ignoredFiles = ['.', '..', '.gitkeep', 'e621_Pool_Downloader.zip', '.updatecheck'];
-
-if (!is_dir("build/")) {
-    mkdir("build/", 0755, true);
-}
 
 if (ini_get("phar.readonly") == 0) {
     echo "Building...\n";
