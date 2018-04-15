@@ -18,7 +18,7 @@ class App
     /**
      * App name
      *
-     * @var int
+     * @var string
      */
     private $NAME = 'e621 Pool Downloader';
 
