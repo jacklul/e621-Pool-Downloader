@@ -13,6 +13,11 @@ namespace jacklul\e621dlpool;
 
 define("ROOT", dirname(str_replace("phar://", "", __DIR__)));
 
+/**
+ * Class App
+ *
+ * @property int last_api_request
+ */
 class App
 {
     /**
@@ -27,7 +32,7 @@ class App
      *
      * @var int
      */
-    private $VERSION = '1.1.1';
+    private $VERSION = '1.2.0';
 
     /**
      * App update URL
@@ -100,13 +105,6 @@ class App
     private $POOL_IMAGES = 0;
 
     /**
-     * Number of pages in the pool
-     *
-     * @var int
-     */
-    private $POOL_PAGES = 0;
-
-    /**
      * Class constructor
      *
      * @param  string $arg
@@ -141,6 +139,7 @@ class App
         date_default_timezone_set(date_default_timezone_get());
 
         $this->START_TIME = microtime(true);
+        $this->last_api_request = 0;
     }
 
     private function setPoolIDFromFile($path)
@@ -210,7 +209,7 @@ class App
      */
     private function parseInput($string)
     {
-        if (preg_match("/e621\.net\/pool\/show\/(.*)/", $string, $matches)) {
+        if (preg_match("/e621\.net\/pools\/(.*)/", $string, $matches)) {
             $string = $matches[1];
         }
 
@@ -250,16 +249,21 @@ class App
     /**
      * Get needed data from e621 API
      *
-     * @param  int $page
      * @return mixed
      */
-    private function getPoolPage($page = 1)
+    private function getPool()
     {
-        $result = $this->cURL('https://e621.net/pool/show.json?id=' . $this->POOL_ID . '&page=' . $page, false);
+        $result = $this->cURL('https://e621.net/pools.json?search[id]=' . $this->POOL_ID, false);
+        $this->last_api_request = time();
+
         $result = json_decode($result, true);
 
+		if (count($result) === 1 && is_array($result[0])) {
+			$result = $result[0];
+		}
+		
         if (is_array($result)) {
-            if (!empty($result) && !empty($result['posts'])) {
+            if (!empty($result) && !empty($result['post_ids'])) {
                 if (!empty($result['name'])) {
                     $this->POOL_NAME = $result['name'];
                 } else {
@@ -267,20 +271,10 @@ class App
                 }
 
                 $this->POOL_IMAGES = $result['post_count'];
-                $this->POOL_PAGES = ceil($result['post_count'] / 24);
 
-                $posts = $result['posts'];
-
-                if ($page == 1) {
-                    for ($i = 2; $i <= $this->POOL_PAGES; $i++) {
-                        $result = $this->getPoolPage($i);
-
-                        if ($page == 1) {
-                            foreach ($result as $post) {
-                                array_push($posts, $post);
-                            }
-                        }
-                    }
+                $posts = [];
+                foreach ($result['post_ids'] as $post) {
+                    $posts[] = ['id' => $post];
                 }
 
                 return $posts;
@@ -292,6 +286,32 @@ class App
         }
     }
 
+    /**
+     * Get needed post data from e621 API
+     *
+     * @param  int $post_id
+     * @return mixed
+     */
+    private function getPost($post_id)
+    {
+        if ($this->last_api_request === time()) {
+            sleep(1);
+        }
+
+        $result = $this->cURL('https://e621.net/posts.json?tags=id:' . $post_id, false);
+        $this->last_api_request = time();
+
+        $result = json_decode($result, true);
+
+        if (is_array($result) && is_array($result['posts']) && count($result['posts']) === 1) {
+			return isset($result['posts'][0]['file']) ? $result['posts'][0] : null;
+        } elseif (is_array($result) && is_array($result['posts']) && count($result['posts']) === 0) {
+            return null;
+        } else {
+            print("\rEmpty or invalid result from the API!\n");
+        }
+    }
+	
     /**
      * Main function
      */
@@ -362,7 +382,7 @@ class App
 
         print("Getting pool info...");
 
-        $posts = $this->getPoolPage();
+        $posts = $this->getPool();
 
         if ($posts) {
             $this->POOL_NAME = preg_replace('/[^a-z0-9_]/i', '', $this->POOL_NAME);
@@ -388,28 +408,47 @@ class App
                 $downloadDir = $this->WORK_DIR;
             }
 
-            print("\rPool: " . $this->POOL_NAME . " (" . $this->POOL_IMAGES . " images, " . $this->POOL_PAGES . " pages)\n\n");
+            print("\rPool: " . $this->POOL_NAME . " (" . $this->POOL_IMAGES . " images)\n\n");
 
             $fileCount = 0;
             $filesDownloaded = 0;
-            foreach ($posts as $post) {
+            foreach ($posts as &$post) {
                 $fileCount++;
-                $fileName = str_pad($fileCount, 3, "0", STR_PAD_LEFT) . '_' . $post['md5'] . '.' . $post['file_ext'];
+                $this->LINE_BUFFER = 'Fetching image #' . $fileCount . '...';
+				print($this->LINE_BUFFER);
 
-                if (!file_exists($downloadDir . '/' . $fileName) || md5_file($downloadDir . '/' . $fileName) != $post['md5']) {
-                    $this->LINE_BUFFER = 'Downloading image #' . $fileCount . '...';
-                    $contents = $this->cURL($post['file_url']);
+				$post = $this->getPost($post['id']);
+				if ($post === null) {
+                    print(" post does not exist!\n");
+				    continue;
+                }
+
+				if (empty($post['file']['url'])) {
+                    print(" missing image url!\n");
+                    continue;
+                }
+
+                $fileName = str_pad($fileCount, 3, "0", STR_PAD_LEFT) . '_' . $post['file']['md5'] . '.' . $post['file']['ext'];
+
+                if (!file_exists($downloadDir . '/' . $fileName) || md5_file($downloadDir . '/' . $fileName) != $post['file']['md5']) {
+                    $this->LINE_BUFFER .= ' downloading post #' . $post['id'] . '...';
+
+                    $contents = $this->cURL($post['file']['url']);
 
                     if ($contents) {
                         $filesDownloaded++;
                         $file = fopen($downloadDir . '/' . $fileName, 'wb');
                         fwrite($file, $contents);
                         fclose($file);
+						print("\r" . $this->LINE_BUFFER . " done\n");
                     } else {
-                        die("File download failed!\n");
+                        print("\r" . $this->LINE_BUFFER . " fail\n");
                     }
+                } else {
+                    print("\r" . $this->LINE_BUFFER . " no download required\n");
                 }
             }
+            unset($post);
 
             $removed = 0;
             foreach (new \DirectoryIterator($downloadDir) as $fileInfo) {
@@ -420,7 +459,7 @@ class App
                 $md5 = md5_file($downloadDir . '/' . $fileInfo->getFilename());
 
                 foreach ($posts as $post) {
-                    if ($md5 === $post['md5']) {
+                    if ($md5 === $post['file']['md5']) {
                         continue 2;
                     }
                 }
@@ -449,9 +488,9 @@ class App
             $this->flushLine();
 
             if ($filesDownloaded > 0) {
-                print("Downloaded " . $filesDownloaded . " images.\n");
+                print("\nDownloaded " . $filesDownloaded . " images.\n");
             } else {
-                print("Nothing to download.\n");
+                print("\nNothing to download.\n");
             }
 
             if ($removed > 0) {
