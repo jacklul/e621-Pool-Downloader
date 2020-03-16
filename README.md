@@ -1,4 +1,4 @@
-# e621 Pool Downloader [![Build Status](https://travis-ci.org/jacklul/e621-Pool-Downloader.svg?branch=master)](https://travis-ci.org/jacklul/e621-Pool-Downloader)
+# e621 Pool Downloader
 
 A script that can download a whole pool of images from [e621.net](https://e621.net) image board, also makes updating pools for ongoing comics easier!
 
