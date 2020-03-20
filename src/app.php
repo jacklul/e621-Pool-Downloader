@@ -32,7 +32,7 @@ class App
      *
      * @var int
      */
-    private $VERSION = '1.2.0';
+    private $VERSION = '1.3.0';
 
     /**
      * App update URL
@@ -105,9 +105,24 @@ class App
     private $POOL_IMAGES = 0;
 
     /**
+     * Login for authorization
+     *
+     * @var string
+     */
+    private $LOGIN = '';
+
+    /**
+     * API key for authorization
+     *
+     * @var string
+     */
+    private $API_KEY = '';
+
+    /**
      * Class constructor
      *
-     * @param  string $arg
+     * @param string $arg
+     *
      * @throws Exception
      */
     public function __construct($arg = '')
@@ -130,6 +145,7 @@ class App
             }
         }
 
+        /** @noinspection TypeUnsafeComparisonInspection */
         if (strtoupper(substr(PHP_OS, 0, 3)) != 'WIN') {
             $this->IS_LINUX = true;
         }
@@ -140,6 +156,18 @@ class App
 
         $this->START_TIME = microtime(true);
         $this->last_api_request = 0;
+
+        if (file_exists(ROOT . '/config.cfg')) {
+            $config = parse_ini_file(ROOT . '/config.cfg');
+
+            if (isset($config['LOGIN'])) {
+                $this->LOGIN = $config['LOGIN'];
+            }
+
+            if (isset($config['API_KEY'])) {
+                $this->API_KEY = $config['API_KEY'];
+            }
+        }
     }
 
     private function setPoolIDFromFile($path)
@@ -205,6 +233,7 @@ class App
      * Parse user input
      *
      * @param  $string
+     *
      * @return mixed
      */
     private function parseInput($string)
@@ -215,23 +244,31 @@ class App
 
         return $string;
     }
+
     /**
      * Perform simple cURL download request
      *
-     * @param  $url
-     * @param  bool $progress
+     * @param string $url
+     * @param bool   $progress
+     * @param bool   $e621auth
+     *
      * @return mixed
      */
-    private function cURL($url, $progress = true)
+    private function cURL($url, $progress = true, $e621auth = false)
     {
         if ($this->USE_CURL) {
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_USERAGENT, $this->USER_AGENT);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            /** @noinspection CurlSslServerSpoofingInspection */
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
             curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+
+            if ($e621auth && !empty($this->LOGIN) && !empty($this->API_KEY)) {
+                curl_setopt($ch, CURLOPT_USERPWD,  $this->LOGIN . ":" . $this->API_KEY);
+            }
 
             if ($progress) {
                 curl_setopt($ch, CURLOPT_NOPROGRESS, false);
@@ -242,6 +279,7 @@ class App
         } else {
             print(str_repeat(' ', 10) . "\r" . $this->LINE_BUFFER);
             $result = file_get_contents($url, false, stream_context_create(['http' => ['user_agent' => $this->USER_AGENT]]));
+
             return $result;
         }
     }
@@ -258,10 +296,10 @@ class App
 
         $result = json_decode($result, true);
 
-		if (count($result) === 1 && is_array($result[0])) {
-			$result = $result[0];
-		}
-		
+        if (count($result) === 1 && is_array($result[0])) {
+            $result = $result[0];
+        }
+
         if (is_array($result)) {
             if (!empty($result) && !empty($result['post_ids'])) {
                 if (!empty($result['name'])) {
@@ -289,7 +327,8 @@ class App
     /**
      * Get needed post data from e621 API
      *
-     * @param  int $post_id
+     * @param int $post_id
+     *
      * @return mixed
      */
     private function getPost($post_id)
@@ -298,20 +337,23 @@ class App
             sleep(1);
         }
 
-        $result = $this->cURL('https://e621.net/posts.json?tags=id:' . $post_id, false);
+        $result = $this->cURL('https://e621.net/posts.json?tags=id:' . $post_id, false, true);
         $this->last_api_request = time();
 
         $result = json_decode($result, true);
 
         if (is_array($result) && is_array($result['posts']) && count($result['posts']) === 1) {
-			return isset($result['posts'][0]['file']) ? $result['posts'][0] : null;
+            return isset($result['posts'][0]['file']) ? $result['posts'][0] : null;
         } elseif (is_array($result) && is_array($result['posts']) && count($result['posts']) === 0) {
             return null;
         } else {
             print("\rEmpty or invalid result from the API!\n");
+
+            print_r($result);
+            exit;
         }
     }
-	
+
     /**
      * Main function
      */
@@ -333,7 +375,9 @@ class App
                 $ch = curl_init($this->UPDATE_URL);
                 curl_setopt($ch, CURLOPT_USERAGENT, $this->USER_AGENT);
                 curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                /** @noinspection CurlSslServerSpoofingInspection */
                 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+                /** @noinspection CurlSslServerSpoofingInspection */
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
                 curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -395,6 +439,7 @@ class App
                 $downloadDir = $this->WORK_DIR . '/' . $this->POOL_NAME;
 
                 if (!is_dir($this->WORK_DIR . '/' . $this->POOL_NAME)) {
+                    /** @noinspection MkdirRaceConditionInspection */
                     mkdir($this->WORK_DIR . '/' . $this->POOL_NAME);
                 }
 
@@ -415,16 +460,16 @@ class App
             foreach ($posts as &$post) {
                 $fileCount++;
                 $this->LINE_BUFFER = 'Fetching image #' . $fileCount . '...';
-				print($this->LINE_BUFFER);
+                print($this->LINE_BUFFER);
 
-				$post = $this->getPost($post['id']);
-				if ($post === null) {
+                $post = $this->getPost($post['id']);
+                if ($post === null) {
                     print(" post does not exist!\n");
-				    continue;
+                    continue;
                 }
 
-				if (empty($post['file']['url'])) {
-                    print(" missing image url!\n");
+                if (empty($post['file']['url'])) {
+                    print(" missing image url - authentication might be required!\n");
                     continue;
                 }
 
@@ -440,7 +485,7 @@ class App
                         $file = fopen($downloadDir . '/' . $fileName, 'wb');
                         fwrite($file, $contents);
                         fclose($file);
-						print("\r" . $this->LINE_BUFFER . " done\n");
+                        print("\r" . $this->LINE_BUFFER . " done\n");
                     } else {
                         print("\r" . $this->LINE_BUFFER . " fail\n");
                     }
@@ -477,6 +522,7 @@ class App
                 }
 
                 if (!is_dir($downloadDir . '/deleted/')) {
+                    /** @noinspection MkdirRaceConditionInspection */
                     mkdir($downloadDir . '/deleted/');
                 }
 

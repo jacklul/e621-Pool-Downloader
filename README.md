@@ -35,6 +35,11 @@ _Current working directory = directory the script was started from, usually it w
 
 _Moving directory over a launch script works well too!_
 
+### Downloading blocked content - logging in
+
+- Rename `config.cfg.example` to `config.cfg`
+- Fill your login details inside it
+
 ## License
 
 See [LICENSE](https://github.com/jacklul/e621-Pool-Downloader/blob/master/LICENSE).

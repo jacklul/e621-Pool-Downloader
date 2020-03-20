@@ -1,0 +1,5 @@
+; Your e621 login
+LOGIN=
+
+; API key obtained in "e621 -> Account -> Manage API Access"
+API_KEY=

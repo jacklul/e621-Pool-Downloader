@@ -9,7 +9,7 @@ $srcRoot = realpath("src");
 $buildRoot = realpath("build");
 
 $buildFile = 'build/e621_Pool_Downloader.zip';
-$ignoredFiles = ['.', '..', '.gitkeep', 'e621_Pool_Downloader.zip', '.updatecheck'];
+$ignoredFiles = ['.', '..', '.gitkeep', 'e621_Pool_Downloader.zip', '.updatecheck', 'config.cfg'];
 
 if (ini_get("phar.readonly") == 0) {
     echo "Building...\n";
@@ -32,6 +32,10 @@ if (ini_get("phar.readonly") == 0) {
 
     if (file_exists($srcRoot . "/run.sh")) {
         copy($srcRoot . "/run.sh", $buildRoot . "/run.sh");
+    }
+
+    if (file_exists($srcRoot . "/config.cfg.example")) {
+        copy($srcRoot . "/config.cfg.example", $buildRoot . "/config.cfg.example");
     }
 
     if (file_exists(__DIR__ . '/vendor/erusev/parsedown/Parsedown.php')) {
