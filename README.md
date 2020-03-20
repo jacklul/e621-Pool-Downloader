@@ -4,13 +4,13 @@ A script that can download a whole pool of images from [e621.net](https://e621.n
 
 ## Requirements:
 
-### Windows
+#### Windows
 
 Package comes with compiled **PHP 5.6 library** (x86 Non Thread Safe)
 
 You will need **Visual C++ 2012 Redistributable (x86)** for it to run - https://www.microsoft.com/en-us/download/details.aspx?id=30679
 
-### Linux
+#### Linux
 
 Install **PHP library** - `sudo apt-get install php-cli`
 
