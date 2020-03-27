@@ -20,7 +20,7 @@ _cURL extension is optional, but recommended -  `sudo apt-get install php-curl`_
 
 ### Downloading:
 - Launch the app by using a start script (Windows: **run.bat**, Linux: **run.sh**)
-- Enter pool address in format: `https://e621.net/pool/show/378`, or just ID: `378` and hit enter
+- Enter pool address in format: `https://e621.net/pools/378`, or just ID: `378` and hit enter
 - Script will retrieve information about the pool and start downloading it to the current working directory
 
 _Current working directory = directory the script was started from, usually it will be downloading to the directory in which the script is._
