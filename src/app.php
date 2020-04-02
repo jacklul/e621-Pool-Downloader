@@ -127,7 +127,7 @@ class App
      */
     public function __construct($arg = '')
     {
-        if (!function_exists('curl_version')) {
+        if (!extension_loaded('curl')) {
             $this->USE_CURL = false;
         }
 
