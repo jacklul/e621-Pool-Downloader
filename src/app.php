@@ -32,7 +32,7 @@ class App
      *
      * @var int
      */
-    private $VERSION = '1.3.1';
+    private $VERSION = '1.4.0';
 
     /**
      * App update URL
@@ -119,6 +119,20 @@ class App
     private $API_KEY = '';
 
     /**
+     * Is posts prefetching enabled?
+     *
+     * @var string
+     */
+    private $PREFETCH = true;
+
+    /**
+     * Cache for posts data
+     *
+     * @var string
+     */
+    private $POSTS_CACHE = [];
+
+    /**
      * Class constructor
      *
      * @param string $arg
@@ -166,6 +180,10 @@ class App
 
             if (isset($config['API_KEY'])) {
                 $this->API_KEY = $config['API_KEY'];
+            }
+
+            if (isset($config['PREFETCH'])) {
+                $this->PREFETCH = (bool)$config['PREFETCH'];
             }
         }
     }
@@ -325,6 +343,49 @@ class App
     }
 
     /**
+     * Prefetch all posts data
+     *
+     * @param array $posts
+     *
+     * @return mixed
+     * @throws \Exception
+     */
+    private function prefetchPosts($posts)
+    {
+        if (count($posts) > 100) {
+            throw new \Exception('Cannot prefetch more than 100 posts at once!');
+        }
+
+        if ($this->last_api_request === time()) {
+            sleep(1);
+        }
+
+        $posts_str = implode(',', $posts);
+
+        $result = $this->cURL('https://e621.net/posts.json?tags=id:' . $posts_str, false, true);
+        $this->last_api_request = time();
+
+        $result = json_decode($result, true);
+
+        if (is_array($result) && is_array($result['posts']) && count($result['posts']) > 0) {
+            foreach ($result['posts'] as $post) {
+                if (isset($post['id'], $post['file'])) {
+                    $this->POSTS_CACHE[$post['id']] = $post;
+                }
+            }
+
+            return true;
+        } elseif (is_array($result) && is_array($result['posts']) && count($result['posts']) === 0) {
+            return null;
+        } else {
+            print("\rEmpty or invalid result from the API!\n");
+
+            print_r($result);
+            exit;
+        }
+    }
+
+    /**
      * Get needed post data from e621 API
      *
      * @param int $post_id
@@ -333,6 +394,10 @@ class App
      */
     private function getPost($post_id)
     {
+        if (isset($this->POSTS_CACHE[$post_id])) {
+            return $this->POSTS_CACHE[$post_id];
+        }
+
         if ($this->last_api_request === time()) {
             sleep(1);
         }
@@ -356,6 +421,8 @@ class App
 
     /**
      * Main function
+     *
+     * @throws \Exception
      */
     public function run()
     {
@@ -454,6 +521,34 @@ class App
             }
 
             print("\rPool: " . $this->POOL_NAME . " (" . $this->POOL_IMAGES . " images)\n\n");
+
+            if ($this->PREFETCH) {
+                $this->LINE_BUFFER = 'Prefetching posts data...';
+                print($this->LINE_BUFFER);
+
+                $posts_simple = [];
+                foreach ($posts as $post) {
+                    $posts_simple[] = $post['id'];
+                }
+
+                $page = 1;
+                $perPage = 100;
+                $totalPages = ceil(count($posts_simple) / $perPage);
+                while (count($posts_simple) > 0) {
+                    $new_posts = array_slice($posts_simple, $perPage * ($page - 1), $perPage);
+
+                    if (count($new_posts) === 0) {
+                        break;
+                    }
+
+                    print("\r" . $this->LINE_BUFFER . ' page ' . $page . '/' . $totalPages);
+                    $page++;
+
+                    $this->prefetchPosts($new_posts);
+                }
+
+                print("\r" . $this->LINE_BUFFER . ' done      ' . "\n\n");
+            }
 
             $fileCount = 0;
             $filesDownloaded = 0;

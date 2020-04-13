@@ -3,3 +3,6 @@ LOGIN=
 
 ; API key obtained in "e621 -> Account -> Manage API Access"
 API_KEY=
+
+; Post prefetching in batch requests (enabled by default)
+;PREFETCH=true
