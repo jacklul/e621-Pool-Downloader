@@ -1,8 +1,8 @@
-; Your e621 login
+; Your e621 username
 LOGIN=
 
 ; API key obtained in "e621 -> Account -> Manage API Access"
 API_KEY=
 
-; Post prefetching in batch requests (enabled by default)
+; Post data prefetching in batch requests (enabled by default)
 ;PREFETCH=true
