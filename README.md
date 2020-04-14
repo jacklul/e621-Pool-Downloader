@@ -12,9 +12,7 @@ You will need **Visual C++ 2012 Redistributable (x86)** for it to run - https://
 
 #### Linux
 
-Install **PHP library** - `sudo apt-get install php-cli`
-
-_cURL extension is optional, but recommended -  `sudo apt-get install php-curl`_
+Install **PHP library** and cURL extension - `sudo apt-get install php-cli php-curl`
 
 ## Usage:
 
@@ -38,7 +36,9 @@ _Moving directory over a launch script works well too!_
 ### Downloading blocked content - logging in:
 
 - Rename `config.cfg.example` to `config.cfg`
-- Fill your login details inside it
+- Fill your login details inside it:
+    - `LOGIN` - your e621 username
+    - `API_KEY` - obtained from `e621 -> Account -> Manage API Access`
 
 ## License
 

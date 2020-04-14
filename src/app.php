@@ -32,7 +32,7 @@ class App
      *
      * @var int
      */
-    private $VERSION = '1.4.0';
+    private $VERSION = '1.4.1';
 
     /**
      * App update URL
@@ -68,13 +68,6 @@ class App
      * @var bool
      */
     private $IS_LINUX = false;
-
-    /**
-     * Is cURL available?
-     *
-     * @var bool
-     */
-    private $USE_CURL = true;
 
     /**
      * Line buffer (for download progress handler)
@@ -142,7 +135,7 @@ class App
     public function __construct($arg = '')
     {
         if (!extension_loaded('curl')) {
-            $this->USE_CURL = false;
+            die("Required extension 'php-curl' not found!\n");
         }
 
         $this->WORK_DIR = getcwd();
@@ -274,32 +267,25 @@ class App
      */
     private function cURL($url, $progress = true, $e621auth = false)
     {
-        if ($this->USE_CURL) {
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_USERAGENT, $this->USER_AGENT);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            /** @noinspection CurlSslServerSpoofingInspection */
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_USERAGENT, $this->USER_AGENT);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        /** @noinspection CurlSslServerSpoofingInspection */
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 60);
 
-            if ($e621auth && !empty($this->LOGIN) && !empty($this->API_KEY)) {
-                curl_setopt($ch, CURLOPT_USERPWD,  $this->LOGIN . ":" . $this->API_KEY);
-            }
-
-            if ($progress) {
-                curl_setopt($ch, CURLOPT_NOPROGRESS, false);
-                curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, [$this, 'cURLProgress']);
-            }
-
-            return curl_exec($ch);
-        } else {
-            print(str_repeat(' ', 10) . "\r" . $this->LINE_BUFFER);
-            $result = file_get_contents($url, false, stream_context_create(['http' => ['user_agent' => $this->USER_AGENT]]));
-
-            return $result;
+        if ($e621auth && !empty($this->LOGIN) && !empty($this->API_KEY)) {
+            curl_setopt($ch, CURLOPT_USERPWD,  $this->LOGIN . ":" . $this->API_KEY);
         }
+
+        if ($progress) {
+            curl_setopt($ch, CURLOPT_NOPROGRESS, false);
+            curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, [$this, 'cURLProgress']);
+        }
+
+        return curl_exec($ch);
     }
 
     /**
