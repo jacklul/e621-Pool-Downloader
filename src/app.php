@@ -32,7 +32,7 @@ class App
      *
      * @var int
      */
-    private $VERSION = '1.4.1';
+    private $VERSION = '1.5.0';
 
     /**
      * App update URL
@@ -536,6 +536,7 @@ class App
                 print("\r" . $this->LINE_BUFFER . ' done      ' . "\n\n");
             }
 
+            $filesList = [];
             $fileCount = 0;
             $filesDownloaded = 0;
             foreach ($posts as &$post) {
@@ -556,7 +557,7 @@ class App
 
                 $fileName = str_pad($fileCount, 3, "0", STR_PAD_LEFT) . '_' . $post['file']['md5'] . '.' . $post['file']['ext'];
 
-                if (!file_exists($downloadDir . '/' . $fileName) || md5_file($downloadDir . '/' . $fileName) != $post['file']['md5']) {
+                if (!file_exists($downloadDir . '/' . $fileName) || md5_file($downloadDir . '/' . $fileName) !== $post['file']['md5']) {
                     $this->LINE_BUFFER .= ' downloading post #' . $post['id'] . '...';
 
                     $contents = $this->cURL($post['file']['url']);
@@ -573,6 +574,8 @@ class App
                 } else {
                     print("\r" . $this->LINE_BUFFER . " no download required\n");
                 }
+
+                $filesList[] = $fileName;
             }
             unset($post);
 
@@ -585,7 +588,7 @@ class App
                 $md5 = md5_file($downloadDir . '/' . $fileInfo->getFilename());
 
                 foreach ($posts as $post) {
-                    if ($md5 === $post['file']['md5']) {
+                    if ($md5 === $post['file']['md5'] && in_array($fileInfo->getFilename(), $filesList, true)) {
                         continue 2;
                     }
                 }
